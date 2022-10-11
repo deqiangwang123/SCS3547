@@ -8,11 +8,11 @@ class AgentState:
     isAlive: bool
 
     def  __init__(self, location:Env.Coords, orientation:Env.Orientation, hasGold: bool, hasArrow: bool, isAlive: bool):
-        self.location = Env.Coords(1, 1)
-        self.orientation = Env.Orientation.East
-        self.hasGold = False
-        self.hasArrow = True
-        self.isAlive = False
+        self.location = location
+        self.orientation = orientation
+        self.hasGold = hasGold
+        self.hasArrow = hasArrow
+        self.isAlive = isAlive
 
     def turnLeft(self):
         match self.orientation:
