@@ -1,7 +1,6 @@
 from enum import Enum
-from gc import garbage
 from AgentState import AgentState
-
+import random
 
 class Orientation(Enum):
     North = 1
@@ -81,7 +80,7 @@ class Environment:
     gridHeight: int
     pitProb: int
     allowClimbWithoutGold: bool
-    agent: AgentState = AgentState(location=Coords(1,1), orientation=Orientation.East, hasGold=False, hasArrow=True, isAlive=True)
+    agent: AgentState
     pitLocations: list[Coords]
     terminated: bool
     wumpusLocation: Coords
@@ -89,9 +88,14 @@ class Environment:
     goldLocation: Coords
     percept: Percept = Percept()
 
-    def __init__(self, gridWidth: int, gridHeight: int, pitProb: int, allowClimbWithoutGold: bool,\
-        agent: AgentState, terminated: bool, wumpusAlive: bool) -> None:
-        pass
+    def __init__(self, gridWidth: int, gridHeight: int, pitProb: int, allowClimbWithoutGold: bool) -> None:
+        self.gridWidth = gridWidth
+        self.gridHeight = gridHeight
+        self.pitProb = pitProb
+        self.allowClimbWithoutGold = allowClimbWithoutGold
+        self.agent = AgentState(location=Coords(1,1), orientation=Orientation.East, hasGold=False, hasArrow=True, isAlive=True)
+        self.terminated = False
+        self.wumpusAlive = True
 
     def _isPitAt(self, coords: Coords) -> bool:
         if coords in self.pitLocations:
@@ -167,6 +171,17 @@ class Environment:
         else:
             return False        
 
+    def _get_random_location(self, gridWidth: int, gridHeight: int) -> Coords:
+        """ _get_random_location: return a random location that is not the (1,1) square """
+        x = 1
+        y = 1
+
+        while (x == 1) and (y == 1):
+            x = random.randint(1, gridWidth)
+            y = random.randint(1, gridHeight)
+
+        return Coords(x, y)
+
     def applyAction(self, action: Action):
         if self.terminated:
             self.percept.setPercept(stench=False, breeze=False, glitter=False, bump=False, scream=False, isTerminated=True, reward=0)
@@ -235,6 +250,36 @@ class Environment:
                     self.percept.setPercept(stench=self._isStench, breeze=self._isBreeze, glitter=self._isGlitter, bump=False, \
                         scream= wumpusKilled, isTerminated= False, reward = -11 if hasArrow else -1)
             
+    def visualize(self) -> str:
+        st:list = []
+        for y in range(self.gridHeight, 0, -1):
+            for x in range(self.gridWidth, 0, -1):
+                st.append(self.gridSymbol(x,y))
+                if x is not 1:
+                    st.append("|")
+            st.append("\n")   
+        return "".join(st)
 
+    def gridSymbol(self, x:int, y:int) -> str:
+        wumpusSymbol = 'W' if self.wumpusAlive else 'w'
+        if self._isAgentAt(Coords(x, y)):
+            match self.agent.orientation:
+                case Orientation.West:
+                    return "A<"
+                case Orientation.East:
+                    return "A>"
+                case Orientation.North:
+                    return "A^"
+                case Orientation.South:
+                    return "Av"                    
+        elif self._isPitAt(Coords(x, y)):
+            return "P"
+        elif self._isGoldAt(Coords(x, y)):
+            return "G"
+        elif self._isWumpusAt(Coords(x, y)):
+            return wumpusSymbol
+        else:
+            return " "
+        
 
 
