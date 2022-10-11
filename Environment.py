@@ -86,7 +86,7 @@ class Environment:
     wumpusLocation: Coords
     wumpusAlive: bool
     goldLocation: Coords
-    percept: Percept = Percept()
+    percept: Percept
 
     def __init__(self, gridWidth: int, gridHeight: int, pitProb: int, allowClimbWithoutGold: bool) -> None:
         self.gridWidth = gridWidth
@@ -94,8 +94,12 @@ class Environment:
         self.pitProb = pitProb
         self.allowClimbWithoutGold = allowClimbWithoutGold
         self.agent = AgentState(location=Coords(1,1), orientation=Orientation.East, hasGold=False, hasArrow=True, isAlive=True)
+        self.pitLocations = self._get_pit_locations()
         self.terminated = False
+        self.wumpusLocation = self._get_wumpus_location()
         self.wumpusAlive = True
+        self.goldLocation = self._get_gold_location()
+        self.percept = Percept()
 
     def _isPitAt(self, coords: Coords) -> bool:
         if coords in self.pitLocations:
@@ -181,6 +185,25 @@ class Environment:
             y = random.randint(1, gridHeight)
 
         return Coords(x, y)
+
+    def _get_gold_location(self) -> Coords:
+        """ _get_gold_location: return a random location not (1,1) for the gold's location """
+        return self._get_random_location()
+
+    def _get_wumpus_location(self) -> Coords:
+        """ _get_wumpus_location: return a random location, not (1,1) for the wumpus's location """
+        return self._get_random_location()
+
+    def _get_pit_locations(self, gridWidth: int, gridHeight: int):
+        """ _get_pit_locations: returns an array of pit locations, randomly selected based on a probability """
+        locations = []
+        for x in range(1, gridWidth + 1):
+            for y in range(1, gridHeight + 1):
+                if (x != 1) or (y != 1):
+                    # Using the PIT_PROBABILITY, randomly determine if a pit will be at this location
+                    if (random.randint(0, 1000 - 1)) < (self.pitProb * 1000):
+                        locations.append(Coords(x, y))
+        return locations
 
     def applyAction(self, action: Action):
         if self.terminated:
