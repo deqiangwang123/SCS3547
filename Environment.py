@@ -1,5 +1,5 @@
 from enum import Enum
-from AgentState import AgentState
+import AgentState
 import random
 
 class Orientation(Enum):
@@ -43,7 +43,6 @@ class Coords:
         if self.y < gridHeight:
             adCells.append(Coords(self.x, self.y + 1))
         return adCells
-
 
 class Percept:
     stench: bool
@@ -132,18 +131,14 @@ class Environment:
             return False            
 
     def _wumpusInLineOfFire(self) -> bool:
-        match self.agent.orientation:
-            case Orientation.West:
-                return (self.agent.location.x > self.wumpusLocation.x) and (self.agent.location.y == self.wumpusLocation.y)
-            case Orientation.East:
-                return (self.agent.location.x < self.wumpusLocation.x) and (self.agent.location.y == self.wumpusLocation.y)
-            case Orientation.North:
-                return (self.agent.location.x == self.wumpusLocation.x) and (self.agent.location.y < self.wumpusLocation.y)
-            case Orientation.North:
-                return (self.agent.location.x == self.wumpusLocation.x) and (self.agent.location.y > self.wumpusLocation.y)
-            case _:
-                print("no agent orientation")
-                return False
+        if self.agent.orientation == Orientation.West:
+            return (self.agent.location.x > self.wumpusLocation.x) and (self.agent.location.y == self.wumpusLocation.y)
+        if self.agent.orientation == Orientation.East:
+            return (self.agent.location.x < self.wumpusLocation.x) and (self.agent.location.y == self.wumpusLocation.y)
+        if self.agent.orientation == Orientation.North:
+            return (self.agent.location.x == self.wumpusLocation.x) and (self.agent.location.y < self.wumpusLocation.y)
+        if self.agent.orientation == Orientation.South:
+            return (self.agent.location.x == self.wumpusLocation.x) and (self.agent.location.y > self.wumpusLocation.y)           
 
     def _killAttemptSuccessful(self) -> bool:
         if self.agent.hasArrow and self.wumpusAlive and self._wumpusInLineOfFire():
@@ -209,76 +204,74 @@ class Environment:
         if self.terminated:
             self.percept.setPercept(stench=False, breeze=False, glitter=False, bump=False, scream=False, isTerminated=True, reward=0)
         else:
-            match action:
-                case Action.Forward:
-                    # move agent
-                    prev_loc : Coords = self.agent.location
-                    self.agent.forward(self.gridWidth, self.gridHeight)
-                    # death
-                    death : bool = (self._isWumpusAt(self.agent.location) and self.wumpusAlive) or self._isPitAt(self.agent.location)
-                    # update agent state
-                    self.agent.isAlive = not death
-                    # update environment state
-                    self.terminated = death
-                    if self.agent.hasGold:
-                        self.goldLocation = self.agent.location
-                    # update bump
-                    isbump : bool = True if prev_loc == self.agent.location else False
-                    # update percept
-                    self.percept.setPercept(stench=self._isStench, breeze=self._isBreeze, glitter=self._isGlitter, bump=isbump, \
-                        scream= False, isTerminated= not self.agent.isAlive, reward = -1 if self.agent.isAlive else -1001)
-                case Action.TurnLeft:
-                    # update agent state
-                    self.agent.turnLeft()
-                    # update percept
+            if action == Action.Forward:
+                # move agent
+                prev_loc : Coords = self.agent.location
+                self.agent.forward(self.gridWidth, self.gridHeight)
+                # death
+                death : bool = (self._isWumpusAt(self.agent.location) and self.wumpusAlive) or self._isPitAt(self.agent.location)
+                # update agent state
+                self.agent.isAlive = not death
+                # update environment state
+                self.terminated = death
+                if self.agent.hasGold:
+                    self.goldLocation = self.agent.location
+                # update bump
+                isbump : bool = True if prev_loc == self.agent.location else False
+                # update percept
+                self.percept.setPercept(stench=self._isStench, breeze=self._isBreeze, glitter=self._isGlitter, bump=isbump, \
+                    scream= False, isTerminated= not self.agent.isAlive, reward = -1 if self.agent.isAlive else -1001)
+            if action == Action.TurnLeft:
+                # update agent state
+                self.agent.turnLeft()
+                # update percept
+                self.percept.setPercept(stench=self._isStench, breeze=self._isBreeze, glitter=self._isGlitter, bump=False, \
+                    scream= False, isTerminated= False, reward = -1)  
+            if action == Action.TurnRight:
+                # update agent state
+                self.agent.turnRight()
+                # update percept
+                self.percept.setPercept(stench=self._isStench, breeze=self._isBreeze, glitter=self._isGlitter, bump=False, \
+                    scream= False, isTerminated= False, reward = -1)  
+            if action == Action.Grab:
+                # update has gold
+                self.agent.hasGold = self._isGlitter()
+                # update gold location
+                if self.agent.hasGold:
+                    self.goldLocation = self.agent.location
+                # update percept
+                if self.agent.hasGold:
                     self.percept.setPercept(stench=self._isStench, breeze=self._isBreeze, glitter=self._isGlitter, bump=False, \
                         scream= False, isTerminated= False, reward = -1)  
-                case Action.TurnRight:
-                    # update agent state
-                    self.agent.turnRight()
-                    # update percept
+            if action == Action.Climb:
+                inStartLocation: bool = ((self.agent.location.x == 1) and (self.agent.location.y == 1))
+                success: bool = self.agent.hasGold and inStartLocation
+                isTerminated: bool = success or (self.allowClimbWithoutGold and inStartLocation)
+                # update environment
+                self.terminated = isTerminated
+                # update percept
+                if isTerminated:
+                    self.percept.setPercept(stench=False, breeze=False, glitter=self._isGlitter, bump=False, \
+                        scream= False, isTerminated= isTerminated, reward = 999 if success else -1)
+                else:
                     self.percept.setPercept(stench=self._isStench, breeze=self._isBreeze, glitter=self._isGlitter, bump=False, \
-                        scream= False, isTerminated= False, reward = -1)  
-                case Action.Grab:
-                    # update has gold
-                    self.agent.hasGold = self._isGlitter()
-                    # update gold location
-                    if self.agent.hasGold:
-                        self.goldLocation = self.agent.location
-                    # update percept
-                    if self.agent.hasGold:
-                        self.percept.setPercept(stench=self._isStench, breeze=self._isBreeze, glitter=self._isGlitter, bump=False, \
-                            scream= False, isTerminated= False, reward = -1)  
-
-                case Action.Climb:
-                    inStartLocation: bool = ((self.agent.location.x == 1) and (self.agent.location.y == 1))
-                    success: bool = self.agent.hasGold and inStartLocation
-                    isTerminated: bool = success or (self.allowClimbWithoutGold and inStartLocation)
-                    # update environment
-                    self.terminated = isTerminated
-                    # update percept
-                    if isTerminated:
-                        self.percept.setPercept(stench=False, breeze=False, glitter=self._isGlitter, bump=False, \
-                            scream= False, isTerminated= isTerminated, reward = 999 if success else -1)
-                    else:
-                        self.percept.setPercept(stench=self._isStench, breeze=self._isBreeze, glitter=self._isGlitter, bump=False, \
-                            scream= False, isTerminated= False, reward = -1)
-                case Action.Shoot:
-                    hasArrow: bool = self.agent.hasArrow
-                    wumpusKilled: bool = self._killAttemptSuccessful()
-                    # update environment
-                    self.agent.hasArrow = False
-                    self.wumpusAlive = self.wumpusAlive and not wumpusKilled
-                    # update percept
-                    self.percept.setPercept(stench=self._isStench, breeze=self._isBreeze, glitter=self._isGlitter, bump=False, \
-                        scream= wumpusKilled, isTerminated= False, reward = -11 if hasArrow else -1)
+                        scream= False, isTerminated= False, reward = -1)
+            if action == Action.Shoot:                        
+                hasArrow: bool = self.agent.hasArrow
+                wumpusKilled: bool = self._killAttemptSuccessful()
+                # update environment
+                self.agent.hasArrow = False
+                self.wumpusAlive = self.wumpusAlive and not wumpusKilled
+                # update percept
+                self.percept.setPercept(stench=self._isStench, breeze=self._isBreeze, glitter=self._isGlitter, bump=False, \
+                    scream= wumpusKilled, isTerminated= False, reward = -11 if hasArrow else -1)
             
     def visualize(self) -> str:
         st:list = []
         for y in range(self.gridHeight, 0, -1):
             for x in range(self.gridWidth, 0, -1):
                 st.append(self.gridSymbol(x,y))
-                if x is not 1:
+                if x != 1:
                     st.append("|")
             st.append("\n")   
         return "".join(st)
@@ -286,15 +279,14 @@ class Environment:
     def gridSymbol(self, x:int, y:int) -> str:
         wumpusSymbol = 'W' if self.wumpusAlive else 'w'
         if self._isAgentAt(Coords(x, y)):
-            match self.agent.orientation:
-                case Orientation.West:
-                    return "A<"
-                case Orientation.East:
-                    return "A>"
-                case Orientation.North:
-                    return "A^"
-                case Orientation.South:
-                    return "Av"                    
+            if self.agent.orientation == Orientation.West:
+                return "A<"
+            if self.agent.orientation == Orientation.East:
+                return "A>"
+            if self.agent.orientation == Orientation.North:               
+                return "A^"
+            if self.agent.orientation == Orientation.South:  
+                return "Av"                    
         elif self._isPitAt(Coords(x, y)):
             return "P"
         elif self._isGoldAt(Coords(x, y)):
