@@ -1,6 +1,6 @@
 import Environment as Env
 
-class Agent:
+class AgentState:
     location: Env.Coords
     orientation: Env.Orientation
     hasGold: bool
@@ -52,3 +52,26 @@ class Agent:
                 self.location = Env.Coords(min(self.x + 1, gridWidth), self.y)
             case _:
                 print("forward error")
+
+    def useArrow(self):
+        self.hasArrow = False
+
+    def applyMoveAction(self, action: Env.Action, gridWidth: int, gridHeight: int):
+        match action:
+            case Env.Action.Forward:
+                self.forward(gridWidth, gridHeight)
+            case Env.Action.TurnLeft:
+                self.turnLeft()
+            case Env.Action.TurnRight:
+                self.turnRight()
+            case _:
+                print("not a move action")
+
+    def applyAction(self, action: Env.Action, gridWidth: int, gridHeight: int):
+        if action == Env.Action.Shoot:
+            self.useArrow()
+        else:
+            self.applyMoveAction(action, gridWidth, gridHeight)
+
+    def show(self):
+        print(f"location: {self.location}, orientation: {self.orientation}, hasGold: {self.hasGold}, hasArrow: {self.hasArrow}, isAlive: {self.isAlive}")
