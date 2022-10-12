@@ -1,6 +1,6 @@
 import random
 import sys
-import Environ as Env
+import Environment as Env
 import NaiveAgent_ as NAgent
 
 # def main():

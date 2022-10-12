@@ -1,8 +1,8 @@
-import Agent_
-import Environ as Env
+import Agent
+import Environment as Env
 import random
 
-class NaiveAgent(Agent_.Agent):
+class NaiveAgent(Agent.Agent):
     def __init__(self, location:Env.Coords, orientation:Env.Orientation, hasGold: bool, hasArrow: bool, isAlive: bool):
         super().__init__(location, orientation, hasGold, hasArrow, isAlive)
 

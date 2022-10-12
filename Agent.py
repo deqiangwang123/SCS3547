@@ -1,4 +1,4 @@
-import Environ as Env
+import Environment as Env
 
 class Agent:
     location: Env.Coords

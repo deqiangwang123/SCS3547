@@ -1,6 +1,4 @@
 from enum import Enum
-# from Agent_State import AgentState
-# from Agent_State import *
 import random
 
 class Orientation(Enum):
@@ -46,10 +44,7 @@ class Coords:
         return adCells
 
     def isEqual(self, coor1) -> bool:
-        if (self.x == coor1.x) and (self.y == coor1.y):
-            return True
-        else:
-            return False
+        return (self.x == coor1.x) and (self.y == coor1.y)
 
     def isInside(self, coors: list) -> bool:
         coors_xy = []
@@ -179,94 +174,55 @@ class Environment:
         self.percept = Percept()
 
     def _isPitAt(self, coords: Coords) -> bool:
-        # pitSet:set = set(list[(x, y) for ])
-        # if coords in self.pitLocations:
-        #     return True
-        # else:
-        #     return False
-
         return coords.isInside(self.pitLocations)
 
     def _isWumpusAt(self, coords: Coords) -> bool:
-        if coords.isEqual(self.wumpusLocation):
-            return True
-        else:
-            return False
+        return coords.isEqual(self.wumpusLocation)
 
     def _isAgentAt(self, coords: Coords) -> bool:
-        if coords.isEqual(self.agent.location):
-            return True
-        else:
-            return False
+        return coords.isEqual(self.agent.location)
 
     def _isGlitter(self) -> bool:
-        if self.goldLocation.isEqual(self.agent.location):
-            return True
-        else:
-            return False
+        return self.goldLocation.isEqual(self.agent.location)
 
     def _isGoldAt(self, coords: Coords) -> bool:
-        if coords.isEqual(self.goldLocation):
-            return True
-        else:
-            return False            
+        return coords.isEqual(self.goldLocation)      
 
     def _wumpusInLineOfFire(self) -> bool:
         if self.agent.orientation == Orientation.West:
             return (self.agent.location.x > self.wumpusLocation.x) and (self.agent.location.y == self.wumpusLocation.y)
-        if self.agent.orientation == Orientation.East:
+        elif self.agent.orientation == Orientation.East:
             return (self.agent.location.x < self.wumpusLocation.x) and (self.agent.location.y == self.wumpusLocation.y)
-        if self.agent.orientation == Orientation.North:
+        elif self.agent.orientation == Orientation.North:
             return (self.agent.location.x == self.wumpusLocation.x) and (self.agent.location.y < self.wumpusLocation.y)
-        if self.agent.orientation == Orientation.South:
+        elif self.agent.orientation == Orientation.South:
             return (self.agent.location.x == self.wumpusLocation.x) and (self.agent.location.y > self.wumpusLocation.y)           
 
     def _killAttemptSuccessful(self) -> bool:
-        if self.agent.hasArrow and self.wumpusAlive and self._wumpusInLineOfFire():
-            return True
-        else:
-            return False
+        return self.agent.hasArrow and self.wumpusAlive and self._wumpusInLineOfFire()
 
     def _isPitAdjacent(self, coords: Coords) -> bool:
         for pit in self.pitLocations:
             if pit.isInside(coords.adjacentCells(self.gridWidth, self.gridHeight)):
                 return True
-        return False
-
-
-        # if set(Coords.adjacentCells()) & set(self.pitLocations):
-        #     return True
-        # else:
-        #     return False      
+        return False     
 
     def _isWumpusAdjacent(self, coords: Coords) -> bool:
         return self.wumpusLocation.isInside(coords.adjacentCells(self.gridWidth, self.gridHeight))
-        # if self.wumpusLocation in Coords.adjacentCells():
-        #     return True
-        # else:
-        #     return False
 
     def _isBreeze(self) -> bool:
-        if self._isPitAdjacent(self.agent.location):
-            return True
-        else:
-            return False
+        return self._isPitAdjacent(self.agent.location)
 
     def _isStench(self) -> bool:
-        if self._isWumpusAdjacent(self.agent.location) or self._isWumpusAt(self.agent.location):
-            return True
-        else:
-            return False        
+        return self._isWumpusAdjacent(self.agent.location) or self._isWumpusAt(self.agent.location)    
 
     def _get_random_location(self, gridWidth: int, gridHeight: int) -> Coords:
         """ _get_random_location: return a random location that is not the (1,1) square """
         x = 1
         y = 1
-
         while (x == 1) and (y == 1):
             x = random.randint(1, gridWidth)
             y = random.randint(1, gridHeight)
-
         return Coords(x, y)
 
     def _get_gold_location(self) -> Coords:
@@ -384,6 +340,3 @@ class Environment:
             return wumpusSymbol
         else:
             return " "
-        
-
-
