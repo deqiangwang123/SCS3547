@@ -104,31 +104,31 @@ class AgentState:
     def turnLeft(self):
         if self.orientation == Orientation.North:
             self.orientation = Orientation.West
-        if self.orientation == Orientation.South:
+        elif self.orientation == Orientation.South:
             self.orientation = Orientation.East
-        if self.orientation == Orientation.West:
+        elif self.orientation == Orientation.West:
             self.orientation = Orientation.South
-        if self.orientation == Orientation.East:
+        elif self.orientation == Orientation.East:
             self.orientation = Orientation.North
 
     def turnRight(self):
         if self.orientation == Orientation.North:
             self.orientation = Orientation.East
-        if self.orientation == Orientation.South:
+        elif self.orientation == Orientation.South:
             self.orientation = Orientation.West
-        if self.orientation == Orientation.West:
+        elif self.orientation == Orientation.West:
             self.orientation = Orientation.North
-        if self.orientation == Orientation.East:
+        elif self.orientation == Orientation.East:
             self.orientation = Orientation.South
 
     def forward(self, gridWidth: int, gridHeight: int):
         if self.orientation == Orientation.North:
             self.location = Coords(self.location.x, min(gridHeight, self.location.y + 1))
-        if self.orientation == Orientation.South:
+        elif self.orientation == Orientation.South:
             self.location = Coords(self.location.x, max(1, self.location.y - 1))
-        if self.orientation == Orientation.West:
+        elif self.orientation == Orientation.West:
             self.location = Coords(max(self.location.x - 1, 1), self.location.y)
-        if self.orientation == Orientation.East:
+        elif self.orientation == Orientation.East:
             self.location = Coords(min(self.location.x + 1, gridWidth), self.location.y)    
 
     def useArrow(self):
@@ -137,9 +137,9 @@ class AgentState:
     def applyMoveAction(self, action: Action, gridWidth: int, gridHeight: int):
         if action == Action.Forward:
             self.forward(gridWidth, gridHeight)
-        if action == Action.TurnLeft:
+        elif action == Action.TurnLeft:
             self.turnLeft()
-        if action == Action.TurnRight:
+        elif action == Action.TurnRight:
             self.turnRight()
 
     def applyAction(self, action: Action, gridWidth: int, gridHeight: int):
@@ -330,7 +330,7 @@ class Environment:
                 # update percept               
                 self.percept.setPercept(stench=self._isStench(), breeze=self._isBreeze(), glitter=self._isGlitter(), bump=False, \
                     scream= False, isTerminated= False, reward = -1)  
-                    
+
             if action == Action.Climb:
                 inStartLocation: bool = ((self.agent.location.x == 1) and (self.agent.location.y == 1))
                 success: bool = self.agent.hasGold and inStartLocation

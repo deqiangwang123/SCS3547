@@ -33,7 +33,7 @@ if __name__ == '__main__':
     print(f"{env.gridHeight}, {env.goldLocation.x}, {env.goldLocation.y}, {env.wumpusLocation.x}, {env.wumpusLocation.y}")
     agent = NAgent.NaiveAgent(location=Env.Coords(1,1), orientation=Env.Orientation.East, hasGold=False, hasArrow=True, isAlive=True)
     totalReward = 0
-    MAX_EPISODE = 10
+    MAX_EPISODE = 100
     terminated = False
 
     for i in range(1, MAX_EPISODE):
