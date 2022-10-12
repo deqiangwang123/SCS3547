@@ -1,5 +1,6 @@
 from enum import Enum
-import AgentState
+# from Agent_State import AgentState
+# from Agent_State import *
 import random
 
 class Orientation(Enum):
@@ -74,6 +75,71 @@ class Percept:
         self.isTerminated = isTerminated
         self.reward = reward
 
+class AgentState:
+    location: Coords
+    orientation: Orientation
+    hasGold: bool
+    hasArrow: bool
+    isAlive: bool
+
+    def  __init__(self, location:Coords, orientation:Orientation, hasGold: bool, hasArrow: bool, isAlive: bool):
+        self.location = location
+        self.orientation = orientation
+        self.hasGold = hasGold
+        self.hasArrow = hasArrow
+        self.isAlive = isAlive
+
+    def turnLeft(self):
+        if self.orientation == Orientation.North:
+            self.orientation = Orientation.West
+        if self.orientation == Orientation.South:
+            self.orientation = Orientation.East
+        if self.orientation == Orientation.West:
+            self.orientation = Orientation.South
+        if self.orientation == Orientation.East:
+            self.orientation = Orientation.North
+
+    def turnRight(self):
+        if self.orientation == Orientation.North:
+            self.orientation = Orientation.East
+        if self.orientation == Orientation.South:
+            self.orientation = Orientation.West
+        if self.orientation == Orientation.West:
+            self.orientation = Orientation.North
+        if self.orientation == Orientation.East:
+            self.orientation = Orientation.South
+
+    def forward(self, gridWidth: int, gridHeight: int):
+        if self.orientation == Orientation.North:
+            self.location = Coords(self.location.x, min(gridHeight, self.location.y + 1))
+        if self.orientation == Orientation.South:
+            self.location = Coords(self.location.x, max(1, self.location.y - 1))
+        if self.orientation == Orientation.West:
+            self.location = Coords(max(self.location.x - 1, 1), self.location.y)
+        if self.orientation == Orientation.East:
+            self.location = Coords(min(self.location.x + 1, gridWidth), self.location.y)    
+
+    def useArrow(self):
+        self.hasArrow = False
+
+    def applyMoveAction(self, action: Action, gridWidth: int, gridHeight: int):
+        if action == Action.Forward:
+            self.forward(gridWidth, gridHeight)
+        if action == Action.TurnLeft:
+            self.turnLeft()
+        if action == Action.TurnRight:
+            self.turnRight()
+
+    def applyAction(self, action: Action, gridWidth: int, gridHeight: int):
+        if action == Action.Shoot:
+            self.useArrow()
+        else:
+            self.applyMoveAction(action, gridWidth, gridHeight)
+
+    def show(self):
+        print(f"location: {self.location}, orientation: {self.orientation}, hasGold: {self.hasGold}, hasArrow: {self.hasArrow}, isAlive: {self.isAlive}")
+
+
 class Environment:
     gridWidth: int
     gridHeight: int
@@ -93,7 +159,7 @@ class Environment:
         self.pitProb = pitProb
         self.allowClimbWithoutGold = allowClimbWithoutGold
         self.agent = AgentState(location=Coords(1,1), orientation=Orientation.East, hasGold=False, hasArrow=True, isAlive=True)
-        self.pitLocations = self._get_pit_locations()
+        self.pitLocations = self._get_pit_locations(gridWidth, gridHeight)
         self.terminated = False
         self.wumpusLocation = self._get_wumpus_location()
         self.wumpusAlive = True
@@ -183,11 +249,11 @@ class Environment:
 
     def _get_gold_location(self) -> Coords:
         """ _get_gold_location: return a random location not (1,1) for the gold's location """
-        return self._get_random_location()
+        return self._get_random_location(self.gridWidth, self.gridHeight)
 
     def _get_wumpus_location(self) -> Coords:
         """ _get_wumpus_location: return a random location, not (1,1) for the wumpus's location """
-        return self._get_random_location()
+        return self._get_random_location(self.gridWidth, self.gridHeight)
 
     def _get_pit_locations(self, gridWidth: int, gridHeight: int):
         """ _get_pit_locations: returns an array of pit locations, randomly selected based on a probability """
