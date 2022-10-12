@@ -45,6 +45,12 @@ class Coords:
             adCells.append(Coords(self.x, self.y + 1))
         return adCells
 
+    def isEqual(self, coor1) -> bool:
+        if (self.x == coor1.x) and (self.y == coor1.y):
+            return True
+        else:
+            return False
+
 class Percept:
     stench: bool
     breeze: bool
@@ -167,31 +173,32 @@ class Environment:
         self.percept = Percept()
 
     def _isPitAt(self, coords: Coords) -> bool:
+        # pitSet:set = set(list[(x, y) for ])
         if coords in self.pitLocations:
             return True
         else:
             return False
 
     def _isWumpusAt(self, coords: Coords) -> bool:
-        if coords == self.wumpusLocation:
+        if coords.isEqual(self.wumpusLocation):
             return True
         else:
             return False
 
     def _isAgentAt(self, coords: Coords) -> bool:
-        if coords == self.agent.location:
+        if coords.isEqual(self.agent.location):
             return True
         else:
             return False
 
     def _isGlitter(self) -> bool:
-        if self.goldLocation == self.agent.location:
+        if self.goldLocation.isEqual(self.agent.location):
             return True
         else:
             return False
 
     def _isGoldAt(self, coords: Coords) -> bool:
-        if coords == self.goldLocation:
+        if coords.isEqual(self.goldLocation):
             return True
         else:
             return False            
@@ -262,7 +269,7 @@ class Environment:
             for y in range(1, gridHeight + 1):
                 if (x != 1) or (y != 1):
                     # Using the PIT_PROBABILITY, randomly determine if a pit will be at this location
-                    if (random.randint(0, 1000 - 1)) < (self.pitProb * 1000):
+                    if (random.randint(0, 1000 - 1)) < (0.2 * 1000):
                         locations.append(Coords(x, y))
         return locations
 
@@ -335,7 +342,8 @@ class Environment:
     def visualize(self) -> str:
         st:list = []
         for y in range(self.gridHeight, 0, -1):
-            for x in range(self.gridWidth, 0, -1):
+            # for x in range(self.gridWidth, 0, -1):
+            for x in range(1, self.gridWidth+1):
                 st.append(self.gridSymbol(x,y))
                 if x != 1:
                     st.append("|")
