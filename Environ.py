@@ -327,10 +327,10 @@ class Environment:
                 # update gold location
                 if self.agent.hasGold:
                     self.goldLocation = self.agent.location
-                # update percept
-                if self.agent.hasGold:
-                    self.percept.setPercept(stench=self._isStench(), breeze=self._isBreeze(), glitter=self._isGlitter(), bump=False, \
-                        scream= False, isTerminated= False, reward = -1)  
+                # update percept               
+                self.percept.setPercept(stench=self._isStench(), breeze=self._isBreeze(), glitter=self._isGlitter(), bump=False, \
+                    scream= False, isTerminated= False, reward = -1)  
+                    
             if action == Action.Climb:
                 inStartLocation: bool = ((self.agent.location.x == 1) and (self.agent.location.y == 1))
                 success: bool = self.agent.hasGold and inStartLocation
@@ -360,7 +360,7 @@ class Environment:
             # for x in range(self.gridWidth, 0, -1):
             for x in range(1, self.gridWidth+1):
                 st.append(self.gridSymbol(x,y))
-                if x != 1:
+                if x != 4:
                     st.append("|")
             st.append("\n")   
         return "".join(st)

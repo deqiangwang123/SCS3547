@@ -30,7 +30,7 @@ def runEpisode(env1: Env.Environment, agent: NAgent.NaiveAgent) -> bool:
 if __name__ == '__main__':
     env = Env.Environment(gridWidth=4, gridHeight=4, pitProb=0.2,\
         allowClimbWithoutGold=False)
-    print(f"{env.gridHeight}, {env.goldLocation.x}, {env.goldLocation.y}")
+    print(f"{env.gridHeight}, {env.goldLocation.x}, {env.goldLocation.y}, {env.wumpusLocation.x}, {env.wumpusLocation.y}")
     agent = NAgent.NaiveAgent(location=Env.Coords(1,1), orientation=Env.Orientation.East, hasGold=False, hasArrow=True, isAlive=True)
     totalReward = 0
     MAX_EPISODE = 10
