@@ -51,6 +51,12 @@ class Coords:
         else:
             return False
 
+    def isInside(self, coors: list) -> bool:
+        coors_xy = []
+        for coor in coors:
+            coors_xy.append((coor.x, coor.y))
+        return (self.x, self.y) in set(coors_xy)
+
 class Percept:
     stench: bool
     breeze: bool
@@ -174,10 +180,12 @@ class Environment:
 
     def _isPitAt(self, coords: Coords) -> bool:
         # pitSet:set = set(list[(x, y) for ])
-        if coords in self.pitLocations:
-            return True
-        else:
-            return False
+        # if coords in self.pitLocations:
+        #     return True
+        # else:
+        #     return False
+
+        return coords.isInside(self.pitLocations)
 
     def _isWumpusAt(self, coords: Coords) -> bool:
         if coords.isEqual(self.wumpusLocation):
@@ -220,24 +228,31 @@ class Environment:
             return False
 
     def _isPitAdjacent(self, coords: Coords) -> bool:
-        if set(Coords.adjacentCells()) & set(self.pitLocations):
-            return True
-        else:
-            return False      
+        for pit in self.pitLocations:
+            if pit.isInside(coords.adjacentCells(self.gridWidth, self.gridHeight)):
+                return True
+        return False
+
+
+        # if set(Coords.adjacentCells()) & set(self.pitLocations):
+        #     return True
+        # else:
+        #     return False      
 
     def _isWumpusAdjacent(self, coords: Coords) -> bool:
-        if self.wumpusLocation in Coords.adjacentCells():
-            return True
-        else:
-            return False
+        return self.wumpusLocation.isInside(coords.adjacentCells(self.gridWidth, self.gridHeight))
+        # if self.wumpusLocation in Coords.adjacentCells():
+        #     return True
+        # else:
+        #     return False
 
-    def _isBreeze(self, coords: Coords) -> bool:
+    def _isBreeze(self) -> bool:
         if self._isPitAdjacent(self.agent.location):
             return True
         else:
             return False
 
-    def _isStench(self, coords: Coords) -> bool:
+    def _isStench(self) -> bool:
         if self._isWumpusAdjacent(self.agent.location) or self._isWumpusAt(self.agent.location):
             return True
         else:
@@ -267,9 +282,9 @@ class Environment:
         locations = []
         for x in range(1, gridWidth + 1):
             for y in range(1, gridHeight + 1):
-                if (x != 1) or (y != 1):
+                if (x != 1) and (y != 1):
                     # Using the PIT_PROBABILITY, randomly determine if a pit will be at this location
-                    if (random.randint(0, 1000 - 1)) < (0.2 * 1000):
+                    if (random.randint(0, 1000 - 1)) < (self.pitProb * 1000):
                         locations.append(Coords(x, y))
         return locations
 
@@ -290,21 +305,21 @@ class Environment:
                 if self.agent.hasGold:
                     self.goldLocation = self.agent.location
                 # update bump
-                isbump : bool = True if prev_loc == self.agent.location else False
+                isbump : bool = True if prev_loc.isEqual(self.agent.location) else False
                 # update percept
-                self.percept.setPercept(stench=self._isStench, breeze=self._isBreeze, glitter=self._isGlitter, bump=isbump, \
+                self.percept.setPercept(stench=self._isStench(), breeze=self._isBreeze(), glitter=self._isGlitter(), bump=isbump, \
                     scream= False, isTerminated= not self.agent.isAlive, reward = -1 if self.agent.isAlive else -1001)
             if action == Action.TurnLeft:
                 # update agent state
                 self.agent.turnLeft()
                 # update percept
-                self.percept.setPercept(stench=self._isStench, breeze=self._isBreeze, glitter=self._isGlitter, bump=False, \
+                self.percept.setPercept(stench=self._isStench(), breeze=self._isBreeze(), glitter=self._isGlitter(), bump=False, \
                     scream= False, isTerminated= False, reward = -1)  
             if action == Action.TurnRight:
                 # update agent state
                 self.agent.turnRight()
                 # update percept
-                self.percept.setPercept(stench=self._isStench, breeze=self._isBreeze, glitter=self._isGlitter, bump=False, \
+                self.percept.setPercept(stench=self._isStench(), breeze=self._isBreeze(), glitter=self._isGlitter(), bump=False, \
                     scream= False, isTerminated= False, reward = -1)  
             if action == Action.Grab:
                 # update has gold
@@ -314,7 +329,7 @@ class Environment:
                     self.goldLocation = self.agent.location
                 # update percept
                 if self.agent.hasGold:
-                    self.percept.setPercept(stench=self._isStench, breeze=self._isBreeze, glitter=self._isGlitter, bump=False, \
+                    self.percept.setPercept(stench=self._isStench(), breeze=self._isBreeze(), glitter=self._isGlitter(), bump=False, \
                         scream= False, isTerminated= False, reward = -1)  
             if action == Action.Climb:
                 inStartLocation: bool = ((self.agent.location.x == 1) and (self.agent.location.y == 1))
@@ -324,10 +339,10 @@ class Environment:
                 self.terminated = isTerminated
                 # update percept
                 if isTerminated:
-                    self.percept.setPercept(stench=False, breeze=False, glitter=self._isGlitter, bump=False, \
+                    self.percept.setPercept(stench=False, breeze=False, glitter=self._isGlitter(), bump=False, \
                         scream= False, isTerminated= isTerminated, reward = 999 if success else -1)
                 else:
-                    self.percept.setPercept(stench=self._isStench, breeze=self._isBreeze, glitter=self._isGlitter, bump=False, \
+                    self.percept.setPercept(stench=self._isStench(), breeze=self._isBreeze(), glitter=self._isGlitter(), bump=False, \
                         scream= False, isTerminated= False, reward = -1)
             if action == Action.Shoot:                        
                 hasArrow: bool = self.agent.hasArrow
@@ -336,7 +351,7 @@ class Environment:
                 self.agent.hasArrow = False
                 self.wumpusAlive = self.wumpusAlive and not wumpusKilled
                 # update percept
-                self.percept.setPercept(stench=self._isStench, breeze=self._isBreeze, glitter=self._isGlitter, bump=False, \
+                self.percept.setPercept(stench=self._isStench(), breeze=self._isBreeze(), glitter=self._isGlitter(), bump=False, \
                     scream= wumpusKilled, isTerminated= False, reward = -11 if hasArrow else -1)
             
     def visualize(self) -> str:

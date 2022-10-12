@@ -12,12 +12,12 @@ import NaiveAgent_ as NAgent
 #     terminated = False
 
 def runEpisode(env1: Env.Environment, agent: NAgent.NaiveAgent) -> bool:
-    nextAction = agent.nextAction(env.percept)
+    nextAction = agent.nextAction(env1.percept)
     print(f"Action: {nextAction}")
     env1.applyAction(nextAction)
     print(env1.visualize())
     env1.percept.show()       
-    return env1.terminated, env.percept.reward
+    return env1.terminated, env1.percept.reward
         
 #     for i in range(1, MAX_EPISODE):
 #         if not terminated:
@@ -40,5 +40,6 @@ if __name__ == '__main__':
         if not terminated:
             terminated, reward = runEpisode(env, agent)
             totalReward = totalReward + reward
+            print(f"Total reward: {totalReward}")
         else:
             break
