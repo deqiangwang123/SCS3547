@@ -190,7 +190,7 @@ class Environment:
         return self.wumpusLocation in self._adjacentCells(coords)
 
     def _isBreeze(self) -> bool:
-        return self._isPitAdjacent(self.agent.location) or self._isAgentAt(loc for loc in self.pitLocations)
+        return self._isPitAdjacent(self.agent.location) or self._isPitAt(self.agent.location)
 
     def _isStench(self) -> bool:
         return self._isWumpusAdjacent(self.agent.location) or self._isWumpusAt(self.agent.location)    
