@@ -3,9 +3,6 @@ import Environment as Env
 import random
 
 class NaiveAgent(Agent.Agent):
-    def __init__(self, location:Env.Coords, orientation:Env.Orientation, hasGold: bool, hasArrow: bool, isAlive: bool):
-        super().__init__(location, orientation, hasGold, hasArrow, isAlive)
-
     def nextAction(self, percept: Env.Percept) -> Env.Action:
         randAction = random.randint(1, 6)
         if randAction == 1:

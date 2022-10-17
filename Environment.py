@@ -42,44 +42,6 @@ class Action(Enum):
 class Coords(namedtuple('Coords', 'x y')):
     pass
 
-
-# class Coords:
-#     x: int
-#     y: int
-
-#     def __init__(self, x: int, y:int) -> None:
-#         self.x = x
-#         self.y = y
-
-#     def isAdjacentTo(self, coor1) -> bool:
-#         return (self.x == coor1.x and abs(coor1.y - self.y) == 1) \
-#         or (self.y == coor1.y and abs(coor1.x - self.x) == 1)
-
-#     def adjacentCells(self, gridWidth: int, gridHeight: int) -> list:
-#         adCells = []
-#         # left
-#         if self.x > 1:
-#             adCells.append(Coords(self.x - 1, self.y))
-#         # right
-#         if self.x < gridWidth:
-#             adCells.append(Coords(self.x + 1, self.y))
-#         # down
-#         if self.y > 1:
-#             adCells.append(Coords(self.x, self.y - 1))
-#         # up
-#         if self.y < gridHeight:
-#             adCells.append(Coords(self.x, self.y + 1))
-#         return adCells
-
-#     def isEqual(self, coor1) -> bool:
-#         return (self.x == coor1.x) and (self.y == coor1.y)
-
-#     def isInside(self, coors: list) -> bool:
-#         coors_xy = []
-#         for coor in coors:
-#             coors_xy.append((coor.x, coor.y))
-#         return (self.x, self.y) in set(coors_xy)
-
 class Percept:
     stench: bool
     breeze: bool
@@ -117,7 +79,8 @@ class AgentState:
     hasArrow: bool
     isAlive: bool
 
-    def  __init__(self, location: Coords = Coords(1,1), orientation:Orientation = Orientation.East, hasGold: bool =False, hasArrow: bool = True, isAlive: bool = True):
+    def  __init__(self, location: Coords = Coords(1,1), orientation:Orientation = Orientation.East, hasGold: bool =False, 
+    hasArrow: bool = True, isAlive: bool = True):
         self.location = location
         self.orientation = orientation
         self.hasGold = hasGold
@@ -147,23 +110,6 @@ class AgentState:
         new_state.location = new_loc
         return new_state
 
-    # def useArrow(self):
-    #     self.hasArrow = False
-
-    # def applyMoveAction(self, action: Action, gridWidth: int, gridHeight: int):
-    #     if action == Action.Forward:
-    #         self.forward(gridWidth, gridHeight)
-    #     elif action == Action.TurnLeft:
-    #         self.turnLeft()
-    #     elif action == Action.TurnRight:
-    #         self.turnRight()
-
-    # def applyAction(self, action: Action, gridWidth: int, gridHeight: int):
-    #     if action == Action.Shoot:
-    #         self.useArrow()
-    #     else:
-    #         self.applyMoveAction(action, gridWidth, gridHeight)
-
     def show(self):
         print(f"location: {self.location}, orientation: {self.orientation}, hasGold: {self.hasGold}, hasArrow: {self.hasArrow}, isAlive: {self.isAlive}")
 
@@ -181,7 +127,7 @@ class Environment:
     goldLocation: Coords
     percept: Percept
 
-    def __init__(self, grid_width=4, grid_height=4, pit_prob=0.2, allow_climb_without_gold=False, agent =AgentState(), pit_locations=[],
+    def __init__(self, grid_width=4, grid_height=4, pit_prob=0.2, allow_climb_without_gold=False, agent = AgentState(), pit_locations=[],
                  terminated=False, wumpus_loc = None, wumpus_alive=True, gold_loc=None) -> None:
         self.gridWidth = grid_width
         self.gridHeight = grid_height
@@ -201,7 +147,7 @@ class Environment:
     def _isWumpusAt(self, coords: Coords) -> bool:
         return coords == self.wumpusLocation
 
-    def _isAgentAt(self, coords: Coords) -> bool:
+    def _isAgentAt(self, coords) -> bool:
         return coords == self.agent.location
 
     def _isGlitter(self) -> bool:
@@ -372,7 +318,6 @@ class Environment:
     def visualize(self) -> str:
         st:list = []
         for y in range(self.gridHeight, 0, -1):
-            # for x in range(self.gridWidth, 0, -1):
             for x in range(1, self.gridWidth+1):
                 st.append(self.gridSymbol(x,y))
                 if x != 4:

@@ -1,9 +1,11 @@
-import Environment as Env
+import Environment
+import NaiveAgent
 
 def main():
-    print("hello world")
+    agent = NaiveAgent.NaiveAgent()
+    env = Environment.Environment()
+    print(f"{env.agent.location.x}")
+
 
 if __name__ == '__main__':
     main()
-
-    
