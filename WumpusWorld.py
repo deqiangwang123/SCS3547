@@ -15,7 +15,7 @@ def main():
         step = step + 1
         nextAction = agent.nextAction(env.percept)
         env = env.applyAction(nextAction)
-        print(f"Step {step} Action: {nextAction}\n")
+        print(f"Step {step} Action: {nextAction}")
         print(f"{env.visualize()}")
         env.percept.show()
         total_award = total_award + env.percept.reward
