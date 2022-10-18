@@ -22,6 +22,15 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             // "cwd": "${workspaceFolder}",
+        },
+        {
+            "name": "Beeline",
+            "type": "python",
+            "request": "launch",
+            "program": "Beeline_WumpusWorld.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            // "cwd": "${workspaceFolder}",
         }
     ]
 }
