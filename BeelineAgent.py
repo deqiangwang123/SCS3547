@@ -7,15 +7,17 @@ class BeelineAgent(Agent.Agent):
     gridHeight: int
     safeLocations: set
     goldLocation: Environment.Coords
+    shortestPath: list
     beelineActionList: list
     
     def __init__(self, gridWidth = 4, gridHeight = 4, safeLocations = set(), 
-    goldLocation = None, beelineActionList = []):
+    goldLocation = None, shortestPath = [], beelineActionList = []):
         super(BeelineAgent, self).__init__()
         self.gridWidth = gridWidth
         self.gridHeight = gridHeight
         self.safeLocations = safeLocations
         self.goldLocation = goldLocation
+        self.shortestPath = shortestPath
         self.beelineActionList = beelineActionList
 
     def nextAction(self, agentState: Environment.AgentState, percept: Environment.Percept) -> Environment.Action:
@@ -25,8 +27,9 @@ class BeelineAgent(Agent.Agent):
         if agentState.hasGold and agentState.location == Environment.Coords(1,1):
             return Environment.Action.Climb
 
-        if percept.glitter:
+        if percept.glitter and not agentState.hasGold:
             self.goldLocation = agentState.location
+            self.shortestPath = self._bfs_shortestpath()
             return Environment.Action.Grab
 
         randAction = random.randint(1, 4)
@@ -56,8 +59,8 @@ class BeelineAgent(Agent.Agent):
                     path_dict.update({coord:curr})
                     visited.append(coord)
             curr = explored.pop(0)
-            if curr == desti:
-                path_dict.update({desti:curr})
+            # if curr == desti:
+            #     path_dict.update({desti:curr})
         
         path.append(desti)
         prev_path = path_dict.get(desti)
@@ -68,7 +71,7 @@ class BeelineAgent(Agent.Agent):
         return path
             
 
-    def _adjacent(coords: Environment.Coords, gridW: int, gridH:int) -> list:
+    def _adjacent(self, coords: Environment.Coords, gridW: int, gridH:int) -> list:
         return [
             Environment.Coords(coords.x - 1, coords.y) if coords.x > 1 else None, # to left
             Environment.Coords(coords.x + 1, coords.y) if coords.x < gridW else None, # to right
