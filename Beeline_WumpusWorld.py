@@ -11,7 +11,7 @@ def main():
     step = 0
     total_award = env.percept.reward
 
-    # print(f"{agent._adjacent(Environment.Coords(1,2), 4, 4)}")
+    print(f"{Environment.Coords(1,2).x}")
     while not env.percept.isTerminated:
         step = step + 1
         nextAction = agent.nextAction(env.agent, env.percept)

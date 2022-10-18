@@ -32,6 +32,13 @@ class BeelineAgent(Agent.Agent):
             self.shortestPath = self._bfs_shortestpath()
             return Environment.Action.Grab
 
+        if agentState.hasGold:
+            if agentState.orientation != self._requireOrientation():
+                return self._turn(agentState.orientation, self._requireOrientation())
+            else:
+                self.shortestPath.pop(0)
+                return Environment.Action.Forward
+
         randAction = random.randint(1, 4)
         if randAction == 1:
             return Environment.Action.Forward
@@ -78,6 +85,56 @@ class BeelineAgent(Agent.Agent):
             Environment.Coords(coords.x, coords.y - 1) if coords.y > 1 else None, # to down
             Environment.Coords(coords.x, coords.y + 1) if coords.y < gridH else None # to up
         ]
+
+    def _requireOrientation(self):
+        start = self.shortestPath[0]
+        next = self.shortestPath[1]
+        if start.x == next.x and start.y > next.y:
+            return Environment.Orientation.South
+        elif start.x == next.x and start.y < next.y:
+            return Environment.Orientation.North
+        elif start.x > next.x and start.y == next.y:
+            return Environment.Orientation.West
+        elif start.x < next.x and start.y == next.y:
+            return Environment.Orientation.East
+        else:
+            print("short path error")
+
+    def _turn(self, agnetOri:Environment.Orientation, requireOri:Environment.Orientation):
+        if agnetOri == Environment.Orientation.North:
+            if requireOri == Environment.Orientation.West:
+                return Environment.Action.TurnLeft
+            elif requireOri == Environment.Orientation.East:
+                return Environment.Action.TurnRight
+            else:
+                return Environment.Action.TurnRight
+
+        elif agnetOri == Environment.Orientation.West:
+            if requireOri == Environment.Orientation.South:
+                return Environment.Action.TurnLeft
+            elif requireOri == Environment.Orientation.North:
+                return Environment.Action.TurnRight
+            else:
+                return Environment.Action.TurnRight
+
+        elif agnetOri == Environment.Orientation.South:
+            if requireOri == Environment.Orientation.East:
+                return Environment.Action.TurnLeft
+            elif requireOri == Environment.Orientation.West:
+                return Environment.Action.TurnRight
+            else:
+                return Environment.Action.TurnRight
+
+        elif agnetOri == Environment.Orientation.East:
+            if requireOri == Environment.Orientation.North:
+                return Environment.Action.TurnLeft
+            elif requireOri == Environment.Orientation.South:
+                return Environment.Action.TurnRight
+            else:
+                return Environment.Action.TurnRight
+        else:
+            print("orientation error")
+
 
 
 
