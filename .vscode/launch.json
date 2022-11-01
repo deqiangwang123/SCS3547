@@ -40,6 +40,15 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             // "cwd": "${workspaceFolder}",
+        },
+        {
+            "name": "PitProb",
+            "type": "python",
+            "request": "launch",
+            "program": "PitLocationProb.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            // "cwd": "${workspaceFolder}",
         }
     ]
 }
