@@ -26,14 +26,6 @@ class PitLocationProb():
     def _updateBreezeMemory(self, loc:Environment.Coords, breeze:bool):
         self.breeze_memory[loc.x-1][loc.y-1] = 1 if breeze else 0
 
-    def _adjacentCells(self, coords: Environment.Coords = Environment.Coords(1,1)) ->list:
-        return [
-            Environment.Coords(coords.x - 1, coords.y) if coords.x > 1 else None, # to left
-            Environment.Coords(coords.x + 1, coords.y) if coords.x < self.gridWidth else None, # to right
-            Environment.Coords(coords.x, coords.y - 1) if coords.y > 1 else None, # to down
-            Environment.Coords(coords.x, coords.y + 1) if coords.y < self.gridHeight else None # to up
-        ]
- 
     def updatePitProb(self, loc:Environment.Coords, breeze:bool):
         # update memory based on correct loc's stech info
         self._updateBreezeMemory(loc, breeze)
@@ -53,16 +45,20 @@ class PitLocationProb():
                     breeze_checkout.append(None)
         # Predict the wumpus location
         pit_loc = PitBreezeGraph.pit_model.predict_proba([breeze_checkout])
-        # nearby loc
-        for nearby_loc in self._adjacentCells(loc):
-            if nearby_loc is not None:
-                index = 4 * (nearby_loc.x - 1) + nearby_loc.y - 1
-                prob = pit_loc[0][index].probability('T')
-                self.pitProb[nearby_loc.x-1][nearby_loc.y-1] = prob       
-
+        # Update all location
+        for i in range(4):
+            for j in range(4):
+                if i != 0 or j != 0:
+                    index = 4 * i + j -1
+                    prob = pit_loc[0][index].probability('T')
+                    self.pitProb[i][j] = prob   
+    
 if __name__ == '__main__':
     pP = PitLocationProb()
     pP.updatePitProb(Environment.Coords(1,1), False)
-    pP.updatePitProb(Environment.Coords(2,1), False)
+    pP.updatePitProb(Environment.Coords(2,1), True)
+    print(pP.pitProb[0][0])
+    print(pP.pitProb[1][1])
+    print(pP.pitProb[1][0])
     print(pP.pitProb[2][0])
 
