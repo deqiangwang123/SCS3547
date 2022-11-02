@@ -51,7 +51,7 @@ class PitLocationProb():
                 if i != 0 or j != 0:
                     index = 4 * i + j -1
                     prob = pit_loc[0][index].probability('T')
-                    self.pitProb[i][j] = prob   
+                    self.pitProb[i][j] = prob
     
 if __name__ == '__main__':
     pP = PitLocationProb()
