@@ -58,7 +58,7 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		visited.append(curr)
 		while curr != desti:
 			for coord in self._adjacent(curr, 4, 4):
-				if coord in self.safeLocations and (not coord in visited):
+				if (coord != None) and (coord in self.safeLocations or coord == desti) and (not coord in visited):
 					explored.append(coord)
 					path_dict.update({coord:curr})
 					visited.append(coord)
@@ -77,11 +77,13 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 	def _findNextLoc(self, agentLoc: Environment.Coords, unexploreQueue:list):
 		nextLoc = Environment.Coords(1, 1)
 		path = []
-		for i in range(len(unexploreQueue)):
-			x = unexploreQueue[i][1].x
-			y = unexploreQueue[i][1].y
+		numQ = len(unexploreQueue)
+		for i in range(numQ):
+			nearLoc = heappop(unexploreQueue)
+			x = nearLoc[1].x
+			y = nearLoc[1].y
 			if self.riskProb[x-1][y-1] < 0.5:
-				nextLoc = unexploreQueue[i][1]
+				nextLoc = nearLoc[1]
 				path = self._bfs_shortestpath(agentLoc, nextLoc)
 				if path:
 					return nextLoc, path
@@ -92,22 +94,7 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		# update risk
 		self._updateRisk(agentState.location, percept.stench, percept.breeze)
 
-		if not agentState.hasGold:
-			# 1. Plan for next target location
-			if agentState.location == self.targetLoc:
-				# 1.1 Update unexplored queue
-				unexploreQueue = []
-				for loc in self.unexploredLocs:
-					heappush(unexploreQueue, (np.linalg.norm((loc.x-1, loc.y-1)), loc))
-				# 1.2 Find target location
-				self.targetLoc, self.shortestPath = self._findNextLoc(agentState.location, unexploreQueue)
-			# 2. Go to target location
-			else:
-				if agentState.orientation != self._requireOrientation():
-					return self._turn(agentState.orientation, self._requireOrientation())
-				else:
-					self.shortestPath.pop(0)
-					return Environment.Action.Forward
+
 
 		# Climb when hasGold and at (1,1)
 		if agentState.hasGold and agentState.location == Environment.Coords(1,1):
@@ -124,6 +111,27 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 			else:
 				self.shortestPath.pop(0)
 				return Environment.Action.Forward
+
+		if not agentState.hasGold:
+			self.safeLocations.add(agentState.location)
+			# 1. Plan for next target location
+			while agentState.location == self.targetLoc:
+				# 1.1 Update unexplored queue
+				unexploreQueue = []
+				for loc in self.unexploredLocs:
+					heappush(unexploreQueue, (np.linalg.norm((loc.x-agentState.location.x, loc.y-agentState.location.y)), loc))
+				# 1.2 Find target location
+				self.targetLoc, self.shortestPath = self._findNextLoc(agentState.location, unexploreQueue)
+				# 1.3 Remove visited
+				self.unexploredLocs.remove(self.targetLoc)
+			# 2. Go to target location
+
+			if agentState.orientation != self._requireOrientation():
+				return self._turn(agentState.orientation, self._requireOrientation())
+			else:
+				self.shortestPath.pop(0)
+				return Environment.Action.Forward
+
 		return None
 		# Other random
 		# randAction = random.randint(1, 4)
@@ -136,6 +144,15 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		# if randAction == 4:
 		# 	return Environment.Action.Shoot                
 
+	def visualize(self) -> str:
+		st:list = []
+		for y in range(self.gridHeight, 0, -1):
+			for x in range(1, self.gridWidth+1):
+				st.extend(str(np.around(self.riskProb[x-1][y-1],2)))
+				if x != 4:
+					st.append("|")
+			st.append("\n")   
+		return "".join(st)
 
 if __name__ == '__main__':
 	probAgent =  ProbAgent()
