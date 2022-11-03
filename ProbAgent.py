@@ -13,6 +13,7 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 	riskProb: 		np.ndarray
 	unexploredLocs: set
 	targetLoc:		Environment.Coords
+	giveUp:			bool
 
 	def __init__(self, gridWidth = 4, gridHeight = 4, safeLocations = set(), goldLocation = None, shortestPath = [], beelineActionList = []):
 		super(ProbAgent, self).__init__(gridWidth, gridHeight, safeLocations, goldLocation, shortestPath, beelineActionList)
@@ -36,6 +37,7 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 					self.unexploredLocs.add(Environment.Coords(i+1, j+1))	
 		# initial target loc
 		self.targetLoc = Environment.Coords(1, 1)
+		self.giveUp = False
 
 	def _updateRisk(self, loc: Environment.Coords, stench:bool, breeze:bool):
 		self.wumpusLocProb.updateWumpusProb(loc, stench)
@@ -59,10 +61,14 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		while curr != desti:
 			for coord in self._adjacent(curr, 4, 4):
 				if (coord != None) and (coord in self.safeLocations or coord == desti) and (not coord in visited):
+				# if (coord != None) and  (not coord in visited):
 					explored.append(coord)
 					path_dict.update({coord:curr})
 					visited.append(coord)
-			curr = explored.pop(0)
+			if len(explored) != 0:
+				curr = explored.pop(0)
+			else:
+				return path
             # if curr == desti:
             #     path_dict.update({desti:curr})
         
@@ -87,6 +93,9 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 				path = self._bfs_shortestpath(agentLoc, nextLoc)
 				if path:
 					return nextLoc, path
+				else:
+					self.giveUp = True
+					return Environment.Coords(1,1), self._bfs_shortestpath(agentLoc, Environment.Coords(1,1))
 		return nextLoc, path
 			
 
@@ -94,15 +103,14 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		# update risk
 		self._updateRisk(agentState.location, percept.stench, percept.breeze)
 
-
-
 		# Climb when hasGold and at (1,1)
-		if agentState.hasGold and agentState.location == Environment.Coords(1,1):
+		if (self.giveUp or agentState.hasGold) and agentState.location == Environment.Coords(1,1):
 			return Environment.Action.Climb
 		# Grab when found gold
 		if percept.glitter and not agentState.hasGold:
 			self.goldLocation = agentState.location
-			self.shortestPath = self._bfs_shortestpath()
+			self.targetLoc = Environment.Coords(1,1)
+			self.shortestPath = self._bfs_shortestpath(agentState.location, Environment.Coords(1,1))
 			return Environment.Action.Grab
 		# Go back to Origin when hasGold
 		if agentState.hasGold:
@@ -112,16 +120,26 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 				self.shortestPath.pop(0)
 				return Environment.Action.Forward
 
-		if not agentState.hasGold:
+		if (not agentState.hasGold) and (not self.giveUp):
 			self.safeLocations.add(agentState.location)
 			# 1. Plan for next target location
 			while agentState.location == self.targetLoc:
 				# 1.1 Update unexplored queue
 				unexploreQueue = []
 				for loc in self.unexploredLocs:
-					heappush(unexploreQueue, (np.linalg.norm((loc.x-agentState.location.x, loc.y-agentState.location.y)), loc))
+					heappush(unexploreQueue, (self.riskProb[loc.x-1][loc.y-1], loc))
+				unexploreQueue_loc = []
+				curr = heappop(unexploreQueue)
+				heappush(unexploreQueue_loc, (np.linalg.norm((curr[1].x-agentState.location.x, curr[1].y-agentState.location.y)), curr[1]))
+				for i in range(len(unexploreQueue)-1):
+					next = heappop(unexploreQueue)
+					if np.abs(curr[0] - next[0]) <0.001:
+						heappush(unexploreQueue_loc, (np.linalg.norm((next[1].x-agentState.location.x, next[1].y-agentState.location.y)), next[1]))
+					else:
+						break
+
 				# 1.2 Find target location
-				self.targetLoc, self.shortestPath = self._findNextLoc(agentState.location, unexploreQueue)
+				self.targetLoc, self.shortestPath = self._findNextLoc(agentState.location, unexploreQueue_loc)
 				# 1.3 Remove visited
 				self.unexploredLocs.remove(self.targetLoc)
 			# 2. Go to target location
@@ -133,16 +151,6 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 				return Environment.Action.Forward
 
 		return None
-		# Other random
-		# randAction = random.randint(1, 4)
-		# if randAction == 1:
-		# 	return Environment.Action.Forward
-		# if randAction == 2:
-		# 	return Environment.Action.TurnLeft
-		# if randAction == 3:
-		# 	return Environment.Action.TurnRight
-		# if randAction == 4:
-		# 	return Environment.Action.Shoot                
 
 	def visualize(self) -> str:
 		st:list = []
