@@ -12,6 +12,7 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 	pitLocProb: 	PitLocationProb.PitLocationProb
 	riskProb: 		np.ndarray
 	unexploredLocs: set
+	lowRiskLocs:	set
 	targetLoc:		Environment.Coords
 	giveUp:			bool
 
@@ -31,6 +32,7 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		self.riskProb[0][0] = 0		
 		# initialize unexplored set
 		self.unexploredLocs = set()
+		self.lowRiskLocs = set()
 		for i in range(4):
 			for j in range(4):
 				if i != 0 or j != 0:
@@ -40,13 +42,16 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		self.giveUp = False
 
 	def _updateRisk(self, loc: Environment.Coords, stench:bool, breeze:bool):
+		self.lowRiskLocs = set()
 		self.wumpusLocProb.updateWumpusProb(loc, stench)
 		self.pitLocProb.updatePitProb(loc, breeze)
 		for i in range(4):
 			for j in range(4):
 				if i != 0  or j != 0:
 					self.riskProb[i][j] = 1 - (1 - self.wumpusLocProb.wumpusProb[i][j])\
-						* (1 - self.pitLocProb.pitProb[i][j])		
+						* (1 - self.pitLocProb.pitProb[i][j])	
+					if self.riskProb[i][j] < 0.5:
+						self.lowRiskLocs.add(Environment.Coords(i+1, j+1))
 
 	def _bfs_shortestpath(self, agentLoc:Environment.Coords, destination:Environment.Coords) -> list:
 		path = []
@@ -60,15 +65,16 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		visited.append(curr)
 		while curr != desti:
 			for coord in self._adjacent(curr, 4, 4):
-				if (coord != None) and (coord in self.safeLocations or coord == desti) and (not coord in visited):
+				if (coord != None) and (coord in self.safeLocations or coord == desti or coord in self.lowRiskLocs) and (not coord in visited):
 				# if (coord != None) and  (not coord in visited):
 					explored.append(coord)
 					path_dict.update({coord:curr})
 					visited.append(coord)
-			if len(explored) != 0:
-				curr = explored.pop(0)
-			else:
-				return path
+			curr = explored.pop(0)
+			# if len(explored) != 0:
+			# 	curr = explored.pop(0)
+			# else:
+			# 	return path
             # if curr == desti:
             #     path_dict.update({desti:curr})
         
@@ -88,7 +94,7 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 			nearLoc = heappop(unexploreQueue)
 			x = nearLoc[1].x
 			y = nearLoc[1].y
-			if self.riskProb[x-1][y-1] < 0.5:
+			if self.riskProb[x-1][y-1] < 0.51:
 				nextLoc = nearLoc[1]
 				path = self._bfs_shortestpath(agentLoc, nextLoc)
 				if path:
@@ -102,6 +108,10 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 	def nextAction(self, agentState: Environment.AgentState, percept: Environment.Percept) -> Environment.Action:
 		# update risk
 		self._updateRisk(agentState.location, percept.stench, percept.breeze)
+
+		# Remove Unexplored
+		if agentState.location in self.unexploredLocs:
+			self.unexploredLocs.remove(agentState.location)
 
 		# Climb when hasGold and at (1,1)
 		if (self.giveUp or agentState.hasGold) and agentState.location == Environment.Coords(1,1):
@@ -140,8 +150,9 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 
 				# 1.2 Find target location
 				self.targetLoc, self.shortestPath = self._findNextLoc(agentState.location, unexploreQueue_loc)
-				# 1.3 Remove visited
-				self.unexploredLocs.remove(self.targetLoc)
+				# # 1.3 Remove visited
+				# if not self.giveUp:
+				# 	self.unexploredLocs.remove(self.targetLoc)
 			# 2. Go to target location
 
 			if agentState.orientation != self._requireOrientation():
@@ -152,11 +163,22 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 
 		return None
 
-	def visualize(self) -> str:
+	def visualizeRiskProb(self) -> str:
 		st:list = []
 		for y in range(self.gridHeight, 0, -1):
 			for x in range(1, self.gridWidth+1):
 				st.extend(str(np.around(self.riskProb[x-1][y-1],2)))
+				if x != 4:
+					st.append("|")
+			st.append("\n")   
+		return "".join(st)
+
+	def visualizeUnexplored(self) -> str:
+		st:list = []
+		for y in range(self.gridHeight, 0, -1):
+			for x in range(1, self.gridWidth+1):
+				show = "X" if Environment.Coords(x, y) in self.unexploredLocs else "O"
+				st.extend(show)
 				if x != 4:
 					st.append("|")
 			st.append("\n")   
