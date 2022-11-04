@@ -15,6 +15,9 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 	lowRiskLocs:	set
 	targetLoc:		Environment.Coords
 	giveUp:			bool
+	hasArrow:		bool
+	wumpusAlive:	bool
+	doShoot:		bool
 
 	def __init__(self, gridWidth = 4, gridHeight = 4, safeLocations = set(), goldLocation = None, shortestPath = [], beelineActionList = []):
 		super(ProbAgent, self).__init__(gridWidth, gridHeight, safeLocations, goldLocation, shortestPath, beelineActionList)
@@ -40,10 +43,20 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		# initial target loc
 		self.targetLoc = Environment.Coords(1, 1)
 		self.giveUp = False
+		self.hasArrow = True
+		self.wumpusAlive = True
+		self.doShoot = False
 
 	def _updateRisk(self, loc: Environment.Coords, stench:bool, breeze:bool):
 		self.lowRiskLocs = set()
-		self.wumpusLocProb.updateWumpusProb(loc, stench)
+
+		if self.wumpusAlive:
+			self.wumpusLocProb.updateWumpusProb(loc, stench)
+		else:
+			for i in range(4):
+				for j in range(4):
+					self.wumpusLocProb.wumpusProb[i][j] = 0
+
 		self.pitLocProb.updatePitProb(loc, breeze)
 		for i in range(4):
 			for j in range(4):
@@ -103,11 +116,44 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 					self.giveUp = True
 					return Environment.Coords(1,1), self._bfs_shortestpath(agentLoc, Environment.Coords(1,1))
 		return nextLoc, path
-			
+
+	def _shoot(self, loc:Environment.Coords):
+		for coord in self._adjacent(loc, 4, 4):
+			if coord != None and self.wumpusLocProb.wumpusProb[coord.x-1][coord.y-1] > 0.4999:
+				return True, coord
+		return False, None
+
+	def _requireOrientation(self, start, next):
+		if start.x == next.x and start.y > next.y:
+			return Environment.Orientation.South
+		elif start.x == next.x and start.y < next.y:
+			return Environment.Orientation.North
+		elif start.x > next.x and start.y == next.y:
+			return Environment.Orientation.West
+		elif start.x < next.x and start.y == next.y:
+			return Environment.Orientation.East
+		else:
+			print("short path error")
+
+
 
 	def nextAction(self, agentState: Environment.AgentState, percept: Environment.Percept) -> Environment.Action:
 		# update risk
 		self._updateRisk(agentState.location, percept.stench, percept.breeze)
+		# shoot
+		if self.hasArrow and self.wumpusAlive:
+			self.doShoot, aim = self._shoot(agentState.location)
+
+		if self.doShoot and self.hasArrow:
+			
+			if agentState.orientation != self._requireOrientation(agentState.location, aim):
+				return self._turn(agentState.orientation, self._requireOrientation(agentState.location, aim))
+			else:
+				self.hasArrow = False
+				return Environment.Action.Shoot
+
+		if percept.scream:
+			self.wumpusAlive = False
 
 		# Remove Unexplored
 		if agentState.location in self.unexploredLocs:
@@ -124,8 +170,8 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 			return Environment.Action.Grab
 		# Go back to Origin when hasGold
 		if agentState.hasGold:
-			if agentState.orientation != self._requireOrientation():
-				return self._turn(agentState.orientation, self._requireOrientation())
+			if agentState.orientation != self._requireOrientation(self.shortestPath[0], self.shortestPath[1]):
+				return self._turn(agentState.orientation, self._requireOrientation(self.shortestPath[0], self.shortestPath[1]))
 			else:
 				self.shortestPath.pop(0)
 				return Environment.Action.Forward
@@ -155,8 +201,8 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 				# 	self.unexploredLocs.remove(self.targetLoc)
 			# 2. Go to target location
 
-			if agentState.orientation != self._requireOrientation():
-				return self._turn(agentState.orientation, self._requireOrientation())
+			if agentState.orientation != self._requireOrientation(self.shortestPath[0], self.shortestPath[1]):
+				return self._turn(agentState.orientation, self._requireOrientation(self.shortestPath[0], self.shortestPath[1]))
 			else:
 				self.shortestPath.pop(0)
 				return Environment.Action.Forward
@@ -168,6 +214,26 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		for y in range(self.gridHeight, 0, -1):
 			for x in range(1, self.gridWidth+1):
 				st.extend(str(np.around(self.riskProb[x-1][y-1],2)))
+				if x != 4:
+					st.append("|")
+			st.append("\n")   
+		return "".join(st)
+
+	def visualizeWumpusProb(self) -> str:
+		st:list = []
+		for y in range(self.gridHeight, 0, -1):
+			for x in range(1, self.gridWidth+1):
+				st.extend(str(np.around(self.wumpusLocProb.wumpusProb[x-1][y-1],2)))
+				if x != 4:
+					st.append("|")
+			st.append("\n")   
+		return "".join(st)
+
+	def visualizePitProb(self) -> str:
+		st:list = []
+		for y in range(self.gridHeight, 0, -1):
+			for x in range(1, self.gridWidth+1):
+				st.extend(str(np.around(self.pitLocProb.pitProb[x-1][y-1],2)))
 				if x != 4:
 					st.append("|")
 			st.append("\n")   
