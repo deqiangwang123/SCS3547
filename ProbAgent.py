@@ -18,6 +18,7 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 	hasArrow:		bool
 	wumpusAlive:	bool
 	doShoot:		bool
+	noWumMissShot:	list
 
 	def __init__(self, gridWidth = 4, gridHeight = 4, safeLocations = set(), goldLocation = None, shortestPath = [], beelineActionList = []):
 		super(ProbAgent, self).__init__(gridWidth, gridHeight, safeLocations, goldLocation, shortestPath, beelineActionList)
@@ -46,12 +47,16 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		self.hasArrow = True
 		self.wumpusAlive = True
 		self.doShoot = False
+		self.noWumMissShot = []
 
 	def _updateRisk(self, loc: Environment.Coords, stench:bool, breeze:bool):
 		self.lowRiskLocs = set()
 
 		if self.wumpusAlive:
-			self.wumpusLocProb.updateWumpusProb(loc, stench)
+			self.wumpusLocProb.updateWumpusProb(loc, stench, len(self.unexploredLocs))
+			if len(self.noWumMissShot) != 0:
+				for loca in self.noWumMissShot:
+					self.wumpusLocProb.updateWumpusProb(loca, stench, len(self.unexploredLocs))
 		else:
 			for i in range(4):
 				for j in range(4):
@@ -135,6 +140,15 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		else:
 			print("short path error")
 
+	def _notwumpusInLineOfFire(self, agentState: Environment.AgentState):
+		if agentState.orientation == Environment.Orientation.West:
+			return [Environment.Coords(x, agentState.location.y) for x in range(1, 5) if x < agentState.location.x]
+		elif agentState.orientation == Environment.Orientation.East:
+			return [Environment.Coords(x, agentState.location.y) for x in range(1, 5) if x > agentState.location.x]
+		elif agentState.orientation == Environment.Orientation.North:
+			return [Environment.Coords(agentState.location.x, y) for y in range(1, 5) if y > agentState.location.y]
+		elif agentState.orientation == Environment.Orientation.South:
+			return [Environment.Coords(agentState.location.x, y) for y in range(1, 5) if y < agentState.location.y]           
 
 
 	def nextAction(self, agentState: Environment.AgentState, percept: Environment.Percept) -> Environment.Action:
@@ -152,8 +166,19 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 				self.hasArrow = False
 				return Environment.Action.Shoot
 
-		if percept.scream:
-			self.wumpusAlive = False
+		if self.doShoot and (not self.hasArrow):
+			#just shoot with previous move
+			self.doShoot = False
+			if percept.scream:
+				# wumpus dead
+				self.wumpusAlive = False
+				self._updateRisk(agentState.location, percept.stench, percept.breeze)
+				
+			else:
+				# miss the shoot
+				self.noWumMissShot = self._notwumpusInLineOfFire(agentState)
+				self._updateRisk(agentState.location, percept.stench, percept.breeze)
+
 
 		# Remove Unexplored
 		if agentState.location in self.unexploredLocs:

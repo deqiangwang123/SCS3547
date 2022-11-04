@@ -31,6 +31,16 @@
             "justMyCode": true,
             // "cwd": "${workspaceFolder}",
         },
+        {
+            "name": "WumpusLocationProb",
+            "type": "python",
+            "request": "launch",
+            "program": "WumpusLocationProb.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            // "cwd": "${workspaceFolder}",
+        },
+        
  
     ]
 }
