@@ -60,10 +60,11 @@ class WumpusLocationProb():
         self.wumpusGraph.setWumpus_loc_prob(self.wumDict)
         self.wumpusGraph.bakeModel()
 
-    def updateWumpusProb(self, loc:Environment.Coords, stench:bool, safeNum:int):
+    def updateWumpusProb(self, loc:Environment.Coords, stench:bool, safeNum:int, missShot: bool):
         # update memory based on correct loc's stech info
         self._updateNotWumpus(loc, safeNum)
-        self._updateStenchMemory(loc, stench)
+        if not missShot:
+            self._updateStenchMemory(loc, stench)
         # Use a list to store the stech info for BN, the first None is wumpus location
         stench_checkout = [None]
         for i in range(4):
@@ -86,9 +87,9 @@ class WumpusLocationProb():
 
 if __name__ == '__main__':
     wP = WumpusLocationProb()
-    wP.updateWumpusProb(Environment.Coords(1,1), False)
-    wP.updateWumpusProb(Environment.Coords(2,1), True)
-    wP.updateWumpusProb(Environment.Coords(3,1), False)
+    wP.updateWumpusProb(Environment.Coords(1,1), False, 14, False)
+    wP.updateWumpusProb(Environment.Coords(2,1), True, 13, False)
+    wP.updateWumpusProb(Environment.Coords(3,1), False, 12, False)
     # dict_1 = {}
     # dict_1['2_1'] = 0.4999
     print(wP.wumpusProb[1][0])
