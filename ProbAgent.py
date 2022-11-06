@@ -68,7 +68,7 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 				if i != 0  or j != 0:
 					self.riskProb[i][j] = 1 - (1 - self.wumpusLocProb.wumpusProb[i][j])\
 						* (1 - self.pitLocProb.pitProb[i][j])	
-					if self.riskProb[i][j] < 0.5:
+					if self.riskProb[i][j] < 0.15:
 						self.lowRiskLocs.add(Environment.Coords(i+1, j+1))
 
 	def _bfs_shortestpath(self, agentLoc:Environment.Coords, destination:Environment.Coords) -> list:
@@ -88,7 +88,10 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 					explored.append(coord)
 					path_dict.update({coord:curr})
 					visited.append(coord)
-			curr = explored.pop(0)
+			if len(explored) > 0:
+				curr = explored.pop(0)
+			else:
+				return []
 			# if len(explored) != 0:
 			# 	curr = explored.pop(0)
 			# else:
@@ -115,12 +118,15 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 			if self.riskProb[x-1][y-1] < 0.51:
 				nextLoc = nearLoc[1]
 				path = self._bfs_shortestpath(agentLoc, nextLoc)
-				if path:
-					return nextLoc, path
+				if len(path) == 0:
+					continue
 				else:
-					self.giveUp = True
-					return Environment.Coords(1,1), self._bfs_shortestpath(agentLoc, Environment.Coords(1,1))
-		return nextLoc, path
+					break
+		if path:
+			return nextLoc, path
+		else:
+			self.giveUp = True
+			return Environment.Coords(1,1), self._bfs_shortestpath(agentLoc, Environment.Coords(1,1))
 
 	def _shoot(self, loc:Environment.Coords):
 		for coord in self._adjacent(loc, 4, 4):
