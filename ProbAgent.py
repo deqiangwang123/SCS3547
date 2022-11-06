@@ -203,7 +203,30 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 
 		if (not agentState.hasGold) and (not self.giveUp):
 			self.safeLocations.add(agentState.location)
-			# 1. Plan for next target location
+			# One more check before move to target
+			if len(self.shortestPath) == 2:
+				unexploreQueue = []
+				for loc in self.unexploredLocs:
+					heappush(unexploreQueue, (self.riskProb[loc.x-1][loc.y-1], loc))
+				unexploreQueue_loc = []
+				curr = heappop(unexploreQueue)
+				heappush(unexploreQueue_loc, (np.linalg.norm((curr[1].x-agentState.location.x, curr[1].y-agentState.location.y)), curr[1]))
+				for i in range(len(unexploreQueue)-1):
+					next = heappop(unexploreQueue)
+					if np.abs(curr[0] - next[0]) <0.001:
+						heappush(unexploreQueue_loc, (np.linalg.norm((next[1].x-agentState.location.x, next[1].y-agentState.location.y)), next[1]))
+					else:
+						break
+				targetLoc_temp, shortestPath_temp = self._findNextLoc(agentState.location, unexploreQueue_loc)
+				if targetLoc_temp == self.targetLoc:
+					pass
+				else:
+					self.targetLoc = targetLoc_temp
+					self.shortestPath = shortestPath_temp.copy()
+				if len(self.shortestPath) <= 1:
+					self.giveUp = True
+
+			# 1. Plan for next target location			
 			while agentState.location == self.targetLoc:
 				# 1.1 Update unexplored queue
 				unexploreQueue = []
@@ -225,7 +248,20 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 				# if not self.giveUp:
 				# 	self.unexploredLocs.remove(self.targetLoc)
 			# 2. Go to target location
+				if len(self.shortestPath) <= 1:
+					self.giveUp = True
+					self.targetLoc = Environment.Coords(1,1)
+					self.shortestPath = self._bfs_shortestpath(agentState.location, Environment.Coords(1,1))
+					break
+			if not self.giveUp:
+				if agentState.orientation != self._requireOrientation(self.shortestPath[0], self.shortestPath[1]):
+					return self._turn(agentState.orientation, self._requireOrientation(self.shortestPath[0], self.shortestPath[1]))
+				else:
+					self.shortestPath.pop(0)
+					return Environment.Action.Forward
 
+		# Go back to Origin when hasGold
+		if self.giveUp:
 			if agentState.orientation != self._requireOrientation(self.shortestPath[0], self.shortestPath[1]):
 				return self._turn(agentState.orientation, self._requireOrientation(self.shortestPath[0], self.shortestPath[1]))
 			else:
