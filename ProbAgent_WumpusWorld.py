@@ -1,7 +1,7 @@
 import Environment
 import ProbAgent
 
-MAX_RUN = 10
+MAX_RUN = 100
 PLOT_INFO = True
 def main():
     total_award_all = []
@@ -19,6 +19,8 @@ def main():
         nextAction = agent.nextAction(env.agent, env.percept)
         if PLOT_INFO:
             print(f"nextAction: {nextAction} AgentLoc: ({env.agent.location.x}, {env.agent.location.y}) TargetLoc: ({agent.targetLoc.x}, {agent.targetLoc.y})\n")
+            print(f"LowRisk: {agent.lowRiskLocs}\n")
+            print(f"SafeLocation: {agent.safeLocations}\n")
             print(f"RiskProb:\n{agent.visualizeRiskProb()}")
             print(f"WumpusProb:\n{agent.visualizeWumpusProb()}")
             print(f"PitProb:\n{agent.visualizePitProb()}")      
@@ -39,6 +41,8 @@ def main():
             nextAction = agent.nextAction(env.agent, env.percept)    
             if PLOT_INFO:      
                 print(f"nextAction: {nextAction} AgentLoc: ({env.agent.location.x}, {env.agent.location.y}) TargetLoc: ({agent.targetLoc.x}, {agent.targetLoc.y})\n")
+                print(f"LowRisk: {agent.lowRiskLocs}\n")
+                print(f"SafeLocation: {agent.safeLocations}\n")
                 print(f"RiskProb:\n{agent.visualizeRiskProb()}")
                 print(f"WumpusProb:\n{agent.visualizeWumpusProb()}")
                 print(f"PitProb:\n{agent.visualizePitProb()}")        

@@ -608,6 +608,32 @@ class WumStechGraph():
 
     def setWumpus_loc_prob(self, wup):
         self.wumpus_loc_prob = pomegranate.distributions.DiscreteDistribution(wup)
+        self.wumpus_loc_prob_state = pomegranate.State(self.wumpus_loc_prob, name="wumpus_loc_prob")
+        self.wumpus_model.add_states(self.wumpus_loc_prob_state, 
+        self.stench_loc_1_1_state, self.stench_loc_1_2_state, self.stench_loc_1_3_state, self.stench_loc_1_4_state,
+        self.stench_loc_2_1_state, self.stench_loc_2_2_state, self.stench_loc_2_3_state, self.stench_loc_2_4_state,
+        self.stench_loc_3_1_state, self.stench_loc_3_2_state, self.stench_loc_3_3_state, self.stench_loc_3_4_state,
+        self.stench_loc_4_1_state, self.stench_loc_4_2_state, self.stench_loc_4_3_state, self.stench_loc_4_4_state)
+
+        self.wumpus_model.add_edge(self.wumpus_loc_prob_state, self.stench_loc_1_1_state)
+        self.wumpus_model.add_edge(self.wumpus_loc_prob_state, self.stench_loc_1_2_state)
+        self.wumpus_model.add_edge(self.wumpus_loc_prob_state, self.stench_loc_1_3_state)
+        self.wumpus_model.add_edge(self.wumpus_loc_prob_state, self.stench_loc_1_4_state)
+
+        self.wumpus_model.add_edge(self.wumpus_loc_prob_state, self.stench_loc_2_1_state)
+        self.wumpus_model.add_edge(self.wumpus_loc_prob_state, self.stench_loc_2_2_state)
+        self.wumpus_model.add_edge(self.wumpus_loc_prob_state, self.stench_loc_2_3_state)
+        self.wumpus_model.add_edge(self.wumpus_loc_prob_state, self.stench_loc_2_4_state)
+
+        self.wumpus_model.add_edge(self.wumpus_loc_prob_state, self.stench_loc_3_1_state)
+        self.wumpus_model.add_edge(self.wumpus_loc_prob_state, self.stench_loc_3_2_state)
+        self.wumpus_model.add_edge(self.wumpus_loc_prob_state, self.stench_loc_3_3_state)
+        self.wumpus_model.add_edge(self.wumpus_loc_prob_state, self.stench_loc_3_4_state)
+
+        self.wumpus_model.add_edge(self.wumpus_loc_prob_state, self.stench_loc_4_1_state)
+        self.wumpus_model.add_edge(self.wumpus_loc_prob_state, self.stench_loc_4_2_state)
+        self.wumpus_model.add_edge(self.wumpus_loc_prob_state, self.stench_loc_4_3_state)
+        self.wumpus_model.add_edge(self.wumpus_loc_prob_state, self.stench_loc_4_4_state)
 
 
 print('Wumpus Stench Graph Built.')
