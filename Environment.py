@@ -308,13 +308,12 @@ class Environment:
                 return new_env
 
     def new_game(self, gridWidth, gridHeight, pit_prob, allow_climb_withou_gold):
-        # new_pit_location = self._get_pit_locations(gridWidth, gridHeight)
-        # new_wumpus_location = self._get_wumpus_location()
-        # new_gold_loc = self._get_gold_location()
+        new_pit_location = self._get_pit_locations(gridWidth, gridHeight)
+        new_wumpus_location = self._get_wumpus_location()
+        new_gold_loc = self._get_gold_location()
 
-        new_pit_location = [Coords(4,3)]
-        new_wumpus_location = Coords(1,2)
-        new_gold_loc = Coords(4,3)
+        # new_pit_location = [Coords(4,2)]
+        # new_gold_loc = Coords(4,2)
 
         env = Environment(grid_width = gridWidth, grid_height = gridHeight, pit_prob=pit_prob, allow_climb_without_gold=allow_climb_withou_gold, 
                          agent=AgentState(), pit_locations= new_pit_location, terminated = False, wumpus_loc=new_wumpus_location, 
