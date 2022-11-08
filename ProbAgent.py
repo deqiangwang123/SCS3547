@@ -48,6 +48,7 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		self.wumpusAlive = True
 		self.doShoot = False
 		self.noWumMissShot = []
+		self.safeLocations = set()
 
 	def _updateRisk(self, loc: Environment.Coords, stench:bool, breeze:bool):
 		self.lowRiskLocs = set()
