@@ -19,15 +19,12 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 	wumpusAlive:	bool
 	doShoot:		bool
 	noWumMissShot:	list
-	safeLocations: set
 
 	def __init__(self, gridWidth = 4, gridHeight = 4, safeLocations = set(), goldLocation = None, shortestPath = [], beelineActionList = []):
 		super(ProbAgent, self).__init__(gridWidth, gridHeight, safeLocations, goldLocation, shortestPath, beelineActionList)
 		self.wumpusLocProb = np.ndarray(shape=(4,4))
 		self.pitLocProb = np.ndarray(shape=(4,4))
 		self.riskProb = np.ndarray(shape=(4,4))
-		self.safeLocations = set()
-		self.safeLocations.add(Environment.Coords(1,1))
 		# initialize wumpus location prob
 		self.wumpusLocProb = WumpusLocationProb.WumpusLocationProb()
 		# initialize pit location prob
@@ -59,7 +56,7 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 			self.wumpusLocProb.updateWumpusProb(loc, stench, len(self.unexploredLocs), missShot=False)
 			if len(self.noWumMissShot) != 0:
 				for loca in self.noWumMissShot:
-					self.wumpusLocProb.updateWumpusProb(loca, stench, len(self.unexploredLocs) - len(self.noWumMissShot), missShot=True)
+					self.wumpusLocProb.updateWumpusProb(loca, stench, len(self.unexploredLocs), missShot=True)
 		else:
 			for i in range(4):
 				for j in range(4):
@@ -196,14 +193,12 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		# Climb when hasGold and at (1,1)
 		if (self.giveUp or agentState.hasGold) and agentState.location == Environment.Coords(1,1):
 			return Environment.Action.Climb
-
 		# Grab when found gold
 		if percept.glitter and not agentState.hasGold:
 			self.goldLocation = agentState.location
 			self.targetLoc = Environment.Coords(1,1)
 			self.shortestPath = self._bfs_shortestpath(agentState.location, Environment.Coords(1,1))
 			return Environment.Action.Grab
-
 		# Go back to Origin when hasGold
 		if agentState.hasGold:
 			if agentState.orientation != self._requireOrientation(self.shortestPath[0], self.shortestPath[1]):
@@ -228,7 +223,6 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 						heappush(unexploreQueue_loc, (np.linalg.norm((next[1].x-agentState.location.x, next[1].y-agentState.location.y)), next[1]))
 					else:
 						break
-
 				targetLoc_temp, shortestPath_temp = self._findNextLoc(agentState.location, unexploreQueue_loc)
 				if targetLoc_temp == self.targetLoc:
 					pass
