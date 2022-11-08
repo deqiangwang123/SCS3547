@@ -58,7 +58,7 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 			self.wumpusLocProb.updateWumpusProb(loc, stench, len(self.unexploredLocs), missShot=False)
 			if len(self.noWumMissShot) != 0:
 				for loca in self.noWumMissShot:
-					self.wumpusLocProb.updateWumpusProb(loca, stench, len(self.unexploredLocs) - len(self.unexploredLocs), missShot=True)
+					self.wumpusLocProb.updateWumpusProb(loca, stench, len(self.unexploredLocs) - len(self.noWumMissShot), missShot=True)
 		else:
 			for i in range(4):
 				for j in range(4):
