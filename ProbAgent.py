@@ -49,6 +49,7 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		self.doShoot = False
 		self.noWumMissShot = []
 		self.safeLocations = set()
+		self.safeLocations.add(Environment.Coords(1,1))
 
 	def _updateRisk(self, loc: Environment.Coords, stench:bool, breeze:bool):
 		self.lowRiskLocs = set()
@@ -57,7 +58,7 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 			self.wumpusLocProb.updateWumpusProb(loc, stench, len(self.unexploredLocs), missShot=False)
 			if len(self.noWumMissShot) != 0:
 				for loca in self.noWumMissShot:
-					self.wumpusLocProb.updateWumpusProb(loca, stench, len(self.unexploredLocs), missShot=True)
+					self.wumpusLocProb.updateWumpusProb(loca, stench, len(self.unexploredLocs) - len(self.unexploredLocs), missShot=True)
 		else:
 			for i in range(4):
 				for j in range(4):
