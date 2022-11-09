@@ -1,7 +1,7 @@
 import Environment
 import ProbAgent
 
-MAX_RUN = 10
+MAX_RUN = 1
 PLOT_INFO = True
 def main():
     total_award_all = []
@@ -43,8 +43,8 @@ def main():
                 print(f"WumpusProb:\n{agent.visualizeWumpusProb()}")
                 print(f"PitProb:\n{agent.visualizePitProb()}")        
                 print(f"Unexplored:\n{agent.visualizeUnexplored()}")
-                print(agent.shortestPath) 
-                print(agent.safeLocations)
+                # print(agent.shortestPath) 
+                # print(agent.safeLocations)
             total_award = total_award + env.percept.reward
             if PLOT_INFO:
                 print(f"Total reward: {total_award}\n")

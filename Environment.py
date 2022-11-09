@@ -313,7 +313,8 @@ class Environment:
         new_gold_loc = self._get_gold_location()
 
         # new_pit_location = [Coords(4,2)]
-        # new_gold_loc = Coords(4,2)
+        # new_wumpus_location = Coords(1,2)
+        # new_gold_loc = Coords(3,2)
 
         env = Environment(grid_width = gridWidth, grid_height = gridHeight, pit_prob=pit_prob, allow_climb_without_gold=allow_climb_withou_gold, 
                          agent=AgentState(), pit_locations= new_pit_location, terminated = False, wumpus_loc=new_wumpus_location, 
