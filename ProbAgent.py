@@ -19,6 +19,7 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 	wumpusAlive:	bool
 	doShoot:		bool
 	noWumMissShot:	list
+	wumpusLoc:		Environment.Coords
 
 	def __init__(self, gridWidth = 4, gridHeight = 4, safeLocations = set(), goldLocation = None, shortestPath = [], beelineActionList = []):
 		super(ProbAgent, self).__init__(gridWidth, gridHeight, safeLocations, goldLocation, shortestPath, beelineActionList)
@@ -50,6 +51,7 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		self.noWumMissShot = []
 		self.safeLocations = set()
 		self.safeLocations.add(Environment.Coords(1,1))
+		self.wumpusLoc = Environment.Coords(0,0)
 
 	def _updateRisk(self, loc: Environment.Coords, stench:bool, breeze:bool):
 		self.lowRiskLocs = set()
@@ -57,8 +59,12 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		if self.wumpusAlive:
 			self.wumpusLocProb.updateWumpusProb(loc, stench, len(self.unexploredLocs), missShot=False)
 			if len(self.noWumMissShot) != 0:
-				for loca in self.noWumMissShot:
-					self.wumpusLocProb.updateWumpusProb(loca, stench, len(self.unexploredLocs) - len(self.noWumMissShot), missShot=True)
+				for i in range(4):
+					for j in range(4):
+						if i == self.wumpusLoc.x - 1 and j == self.wumpusLoc.y - 1:
+							self.wumpusLocProb.wumpusProb[i][j] = 1
+						else:
+							self.wumpusLocProb.wumpusProb[i][j] = 0
 		else:
 			for i in range(4):
 				for j in range(4):
@@ -158,6 +164,16 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 		elif agentState.orientation == Environment.Orientation.South:
 			return [Environment.Coords(agentState.location.x, y) for y in range(1, 5) if y < agentState.location.y]           
 
+	def _updateWumpusLoc(self, agentState: Environment.AgentState):
+		for coord in self._adjacent(agentState.location, 4, 4):
+			if coord != None and (self.wumpusLocProb.wumpusProb[coord.x-1][coord.y-1] > 0.4999) and (coord not in self._notwumpusInLineOfFire(agentState)):
+				return coord
+		return Environment.Coords(0,0)
+		
+
+
+
+
 
 	def nextAction(self, agentState: Environment.AgentState, percept: Environment.Percept) -> Environment.Action:	
 		# update risk
@@ -185,6 +201,9 @@ class ProbAgent(BeelineAgent.BeelineAgent):
 			else:
 				# miss the shoot
 				self.noWumMissShot = self._notwumpusInLineOfFire(agentState)
+				self.wumpusLoc = self._updateWumpusLoc(agentState)
+				if self.wumpusLoc == Environment.Coords(0,0):
+					print("wumpus position error")
 				self._updateRisk(agentState.location, percept.stench, percept.breeze)
 
 
